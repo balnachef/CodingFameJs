@@ -1,0 +1,16 @@
+{
+  "name": "codingfame",
+  "version": "1.0.0",
+  "description": "Hall of fame for coders in a Git repository",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Martin Weihrauch",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.5",
+    "chrono-node": "^2.2.1",
+    "dateformat": "^4.5.1"
+  }
+}
