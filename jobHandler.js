@@ -1,5 +1,5 @@
 const authorMod = require('./Models/author');
-const report = require('./reporter');
+const report = require('./reportHandler');
 
 
 var _job;

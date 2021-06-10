@@ -74,7 +74,7 @@ function embedRepositoryDataIntoHtml(html){
 
 
 function getGeneralInformation(job){
-    var after = chrono.parse(job.Parameters.GitLogTimeAfter);
+    var after = chrono.parseDate(job.Parameters.GitLogTimeAfter);
     var before = chrono.parseDate(job.Parameters.GitLogTimeBefore);
     var dtAfter = Date.parse(after);
     var dtBefore = Date.parse(before);
