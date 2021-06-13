@@ -20,7 +20,11 @@ function report(job, appsettings){
     }
 
     getGeneralInformation(job);
-    var rawdata = fs.readFileSync(appsettings.GeneralSettings.TemplateFile);
+    if (!fs.existsSync(appsettings.GeneralSettings.TemplateFile)) {
+        console.log('Error: File' + appsettings.GeneralSettings.TemplateFile + ' does not exist!');
+        return;
+    }
+    var rawdata = fs.readFileSync(appsettings.GeneralSettings.TemplateFile, 'utf8');
 
     _report = {
         GeneralInformations: "",
@@ -61,10 +65,12 @@ function embedAuthorDataIntoHtml(html){
     };
     
     const $ = cheerio.load(html);
-    for (var i = 0; i < _report.Authors.length; i++){
+    if(_report.Authors !== undefined){
+        for (var i = 0; i < _report.Authors.length; i++){
         
+        }
     }
-
+    return $.html();
 }
 
 function embedRepositoryDataIntoHtml(html){
@@ -134,7 +140,7 @@ function getAuthorData(job){
             }
         }
     }
-
+    return authors;
 }
 
 function findInArray(arr, prop, searchtext){
