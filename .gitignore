@@ -103,3 +103,7 @@ dist
 # TernJS port file
 .tern-port
 job1.json
+reports/
+.eslintrc.js
+.prettierrc
+.vscode/settings.json
