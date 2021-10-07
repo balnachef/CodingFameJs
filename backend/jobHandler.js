@@ -18,6 +18,7 @@ function runJob(job, gitHandle, appsettings){
     
         if(authors.length == 0){
             console.log("No authors were found with git shortlog in repository: " + _job.Repositories[i].Name);
+            _job.Repositories[i].Authors = [];    
             continue;
         }
         _job.Repositories[i].Authors = authors;

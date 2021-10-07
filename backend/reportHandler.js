@@ -97,6 +97,8 @@ function getGeneralInformation(job) {
 
 function getAuthorData(job) {
   /*
+    Looks like this:
+    ------------------
     job.Repositories[index].Authors[index2].loc[]....
         ...Website/wwwroot/js/EasyRadiologyViewer/js/AnnotationRenderer.js:{AddedLines: 80, DeletedLines: 32, TotalLines: 48}
         ...Website/wwwroot/js/EasyRadiologyViewer/js/DisplayEngine.js:{AddedLines: 3, DeletedLines: 3, TotalLines: 0}
