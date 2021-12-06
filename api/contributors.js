@@ -1,7 +1,13 @@
 const shell = require('shelljs')
 
 export default function (req, res, _) {
-  const gitlog = shell.exec('cd /www/market-access-suite && git log --format="%an %aE" | sort /unique', { silent: true }).stdout
+  const url = new URL(req.url, `http://${req.headers.host}`)
+  if (url.searchParams.get('repo') == null) {
+    res.end()
+    return
+  }
+  shell.echo(`cd ${url.searchParams.get('repo')} && git log --format="%an %aE" | sort /unique`)
+  const gitlog = shell.exec(`cd ${url.searchParams.get('repo')} && git log --format="%an %aE" | sort /unique`, { silent: true }).stdout
 
   const users = gitlog.split('\r')
 

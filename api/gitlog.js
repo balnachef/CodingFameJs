@@ -2,6 +2,10 @@ const shell = require('shelljs')
 
 export default function (req, res, _) {
   const url = new URL(req.url, `http://${req.headers.host}`)
+  if (url.searchParams.get('repo') == null) {
+    res.end()
+    return
+  }
   let gitFilterParams = ''
   if (url.searchParams.get('after') != null) {
     gitFilterParams += `--after=${url.searchParams.get('after')} `
@@ -18,7 +22,7 @@ export default function (req, res, _) {
     gitFilterParams += `--author=${url.searchParams.get('author')} `
   }
 
-  const gitlog = shell.exec(`cd /www/market-access-suite && git log --numstat ${gitFilterParams}`, { silent: true }).stdout
+  const gitlog = shell.exec(`cd ${url.searchParams.get('repo')} && git log --numstat ${gitFilterParams}`, { silent: true }).stdout
   const parse = require('parse-git-numstat')
   const commits = parse(gitlog)
 
