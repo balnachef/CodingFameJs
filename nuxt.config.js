@@ -28,7 +28,8 @@ export default {
 
   serverMiddleware: [
     { path: '/gitlog', handler: '~/api/gitlog.js' },
-    { path: '/contributors', handler: '~/api/contributors.js' }
+    { path: '/contributors', handler: '~/api/contributors.js' },
+    { path: '/file', handler: '~/api/file.js' }
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

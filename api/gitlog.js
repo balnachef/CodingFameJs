@@ -1,3 +1,4 @@
+import pathListToTree from 'path-list-to-tree'
 const shell = require('shelljs')
 
 export default function (req, res, _) {
@@ -7,6 +8,7 @@ export default function (req, res, _) {
     return
   }
   let gitFilterParams = ''
+  let ignores = [];
   if (url.searchParams.get('after') != null) {
     gitFilterParams += `--after=${url.searchParams.get('after')} `
   } else {
@@ -22,6 +24,10 @@ export default function (req, res, _) {
     gitFilterParams += `--author=${url.searchParams.get('author')} `
   }
 
+  if (url.searchParams.get('ignore') != null) {
+    ignores = url.searchParams.get('ignore').replace(/ /g, '').split(",");
+  }
+
   const gitlog = shell.exec(`cd ${url.searchParams.get('repo')} && git log --numstat ${gitFilterParams}`, { silent: true }).stdout
   const parse = require('parse-git-numstat')
   const commits = parse(gitlog)
@@ -33,9 +39,10 @@ export default function (req, res, _) {
       added: 0,
       deleted: 0
     },
-    commits: 0
+    commits: 0,
+    files: []
   }
-
+  let files = []
   commits.forEach((commit) => {
     if (output.authors[commit.author.email] && output.authors[commit.author.email] != null) {
       if (commit.stat.length > 0) {
@@ -93,14 +100,17 @@ export default function (req, res, _) {
       }
     }, 0)
     output.commits += 1
+    files = files.concat(commit.stat.map(x => x.filepath))
   })
+
+  // output.files = pathListToTree(files);
+
   res.write(JSON.stringify(output))
   res.end()
 
   function fileExcluded (filepath) {
-    const excluded = ['package-lock.json', 'package.json']
-    for (let i = 0; i < excluded.length; i++) {
-      const element = excluded[i]
+    for (let i = 0; i < ignores.length; i++) {
+      const element = ignores[i]
       if (filepath.includes(element)) {
         return true
       }
