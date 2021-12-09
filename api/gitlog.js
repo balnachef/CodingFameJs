@@ -1,5 +1,39 @@
-import pathListToTree from 'path-list-to-tree'
 const shell = require('shelljs')
+
+function createNode(path, tree, fullpath) {
+    var name = path.shift();
+    var idx = tree.findIndex(function (e) {
+        return e.name == name;
+    });
+    if (idx < 0) {
+        if (name) {
+            tree.push({
+                name: name,
+                children: [],
+                path: fullpath,
+            });
+        }
+        if (path.length !== 0) {
+            if (name) {
+                createNode(path, tree[tree.length - 1].children, fullpath);
+            }
+        }
+    }
+    else {
+        if (name) {
+            createNode(path, tree[idx].children, fullpath);
+        }
+    }
+}
+function parse(data) {
+    var tree = [];
+    for (var i = 0; i < data.length; i++) {
+        var path = data[i];
+        var split = path.split('/');
+        createNode(split, tree, path);
+    }
+    return tree;
+}
 
 export default function (req, res, _) {
   const url = new URL(req.url, `http://${req.headers.host}`)
@@ -29,8 +63,8 @@ export default function (req, res, _) {
   }
 
   const gitlog = shell.exec(`cd ${url.searchParams.get('repo')} && git log --numstat ${gitFilterParams}`, { silent: true }).stdout
-  const parse = require('parse-git-numstat')
-  const commits = parse(gitlog)
+  const parsegit = require('parse-git-numstat')
+  const commits = parsegit(gitlog)
 
   const output = {
     authors: {
@@ -103,7 +137,7 @@ export default function (req, res, _) {
     files = files.concat(commit.stat.map(x => x.filepath))
   })
 
-  // output.files = pathListToTree(files);
+  output.files = parse(files);
 
   res.write(JSON.stringify(output))
   res.end()

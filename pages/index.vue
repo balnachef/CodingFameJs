@@ -16,7 +16,7 @@
               <template #activator="{ on, attrs }">
                 <v-text-field
                   v-model="dateRange"
-                  label="dates"
+                  label="Date filter"
                   prepend-icon="mdi-calendar"
                   readonly
                   v-bind="attrs"
@@ -168,22 +168,22 @@
 
     <v-row>
       <v-col>
-        {{ fileSelected }}, {{ fileOpened }}
+        {{ fileSelected }}
         <v-treeview
           :items="files"
           activatable
-          item-key="name"
+          item-key="path"
           open-on-click
           transition
           :active.sync="fileSelected"
           :open.sync="fileOpened"
         >
           <template #prepend="{ item, open }">
-            <v-icon v-if="!item.file">
+            <v-icon v-if="item.children && item.children.length > 0">
               {{ open ? "mdi-folder-open" : "mdi-folder" }}
             </v-icon>
             <v-icon v-else>
-              {{ files[item.file] }}
+              mdi-file-document
             </v-icon>
           </template>
         </v-treeview>
@@ -328,6 +328,7 @@ export default {
     analize: async function () {
       this.pieCommitsData = [["Author", "Commits"]];
       this.authors = [];
+      this.files = [];
       for (let index = 0; index < this.repositories.length; index++) {
         const repo = this.repositories[index].path;
         if (repo === "") {
@@ -339,7 +340,7 @@ export default {
         }
         let ignore = "";
         if (this.ignore.length > 0) {
-          ignore = `&ignore=${this.ignore}`
+          ignore = `&ignore=${this.ignore}`.replace(/ /g, '')
         }
         const gitlog = await this.$axios.$get(`/gitlog?repo=${repo}${dates}${ignore}`);
 
