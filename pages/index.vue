@@ -28,12 +28,18 @@
                 <v-btn text color="primary" @click="datePicker = false">
                   Cancel
                 </v-btn>
-                <v-btn text color="primary" @click="$refs.datePicker.save(date)">
+                <v-btn
+                  text
+                  color="primary"
+                  @click="$refs.datePicker.save(date)"
+                >
                   OK
                 </v-btn>
               </v-date-picker>
             </v-menu>
           </div>
+        </v-col>
+        <v-col cols="3">
           <div class="predefined-date-range">
             <v-select
               v-model="date"
@@ -44,20 +50,12 @@
             />
           </div>
         </v-col>
-        <v-col cols="3" />
-        <v-col class="d-flex" cols="3">
-          <v-textarea
-            outlined
-            name="input-7-4"
-            label="Ignore paths"
-            v-model="ignore"
-          />
-        </v-col>
+        <v-col cols="3"> </v-col>
       </v-row>
       <v-row justify="space-around">
         <v-col cols="3">
           <div class="repositories-input">
-            <v-row v-for="(item, index) in repositories" :key="index">
+            <v-row v-for="(item, index) in repos" :key="index">
               <v-col cols="9">
                 <v-text-field v-model="item.path" label="Repository" />
               </v-col>
@@ -109,7 +107,7 @@
           <div class="statistics">
             <div class="repositories-list">
               <v-card
-                v-for="repository in analizedRepositories"
+                v-for="repository in repos"
                 :key="repository.path"
                 class="mb-2"
                 elevation="4"
@@ -167,31 +165,31 @@
     <v-divider />
 
     <v-row>
-      <v-col>
-        {{ fileSelected }}
-        <v-treeview
-          :items="files"
-          activatable
-          item-key="path"
-          open-on-click
-          transition
-          :active.sync="fileSelected"
-          :open.sync="fileOpened"
-        >
-          <template #prepend="{ item, open }">
-            <v-icon v-if="item.children && item.children.length > 0">
-              {{ open ? "mdi-folder-open" : "mdi-folder" }}
-            </v-icon>
-            <v-icon v-else>
-              mdi-file-document
-            </v-icon>
-          </template>
-        </v-treeview>
+      <v-col cols="6">
+        <div v-for="(repo, index) in repos" :key="index">
+          <project-tree
+            :items="repo.structure"
+            :activeFile.sync="fileSelected"
+            :openFile.sync="fileOpened"
+            :isIgnoredCallback="isIgnored"
+            :stopIgnoreFileCallback="stopIgnoreFile"
+            :ignoreFileCallback="ignoreFile"
+          />
+          <v-divider />
+        </div>
       </v-col>
-      <v-col />
+      <v-col cols="6">
+        <v-card>
+          <v-card-text class="filePreview">
+            <pre
+              >{{ filePreview }}
+            </pre>
+          </v-card-text>
+        </v-card>
+      </v-col>
     </v-row>
 
-    <GChart type="PieChart" :data="pieCommitsData" :options="chartOptions" />
+    <!-- <GChart type="PieChart" :data="pieCommitsData" :options="chartOptions" /> -->
 
     <!-- <GChart type="ColumnChart" :data="Last3MonthsCommits" :options="chartOptions" /> -->
   </div>
@@ -200,11 +198,17 @@
 /* eslint-disable */
 import { GChart } from "vue-google-charts";
 
+import { Repository } from "~/models/repository";
+import { Author } from "~/models/author";
+import ProjectTree from '../components/ProjectTree.vue';
+
 export default {
   components: {
     GChart,
+    ProjectTree,
   },
   data: () => ({
+    filePreview: "",
     tree: [],
     fileSelected: [],
     fileOpened: [],
@@ -266,7 +270,7 @@ export default {
     authors: [],
     files: [],
     repositories: [{ path: "", lines: {}, commits: 0, authors: [] }],
-    ignore: "",
+    repos: [],
   }),
   computed: {
     analizedRepositories: function () {
@@ -277,6 +281,18 @@ export default {
     },
     dateRange: function () {
       return this.date.join(" - ");
+    },
+    ignore: function () {
+      if (this.repos.length > 0) {
+        console.log("this.repos", this.repos);
+        var ignoredFiles = this.repos.reduce(
+          (p, c) => [...p, ...c.ignoredFiles],
+          []
+        );
+        return ignoredFiles && ignoredFiles.length > 0
+          ? ignoredFiles.join(", ")
+          : [];
+      }
     },
   },
   mounted() {
@@ -329,6 +345,8 @@ export default {
       this.pieCommitsData = [["Author", "Commits"]];
       this.authors = [];
       this.files = [];
+      this.repos = [];
+      const authors = [];
       for (let index = 0; index < this.repositories.length; index++) {
         const repo = this.repositories[index].path;
         if (repo === "") {
@@ -339,16 +357,14 @@ export default {
           dates = `&after=${this.date[0]}&before=${this.date[1]}`;
         }
         let ignore = "";
-        if (this.ignore.length > 0) {
-          ignore = `&ignore=${this.ignore}`.replace(/ /g, '')
+        if (this.ignore && this.ignore.length > 0) {
+          ignore = `&ignore=${this.ignore}`
+            .replace(/ /g, "")
+            .replace(/,\s*$/, "");
         }
-        const gitlog = await this.$axios.$get(`/gitlog?repo=${repo}${dates}${ignore}`);
-
-        this.repositories[index].commits = gitlog.commits;
-        this.repositories[index]["lines"] = {
-          added: gitlog.lines.added,
-          deleted: gitlog.lines.deleted,
-        };
+        const gitlog = await this.$axios.$get(
+          `/gitlog?repo=${repo}${dates}${ignore}`
+        );
 
         for (const [key, value] of Object.entries(gitlog["authors"])) {
           this.pieCommitsData.push([key, value.commits]);
@@ -358,15 +374,24 @@ export default {
             author.lines.added += value.lines.added;
             author.lines.deleted += value.lines.deleted;
           } else {
-            this.authors.push({
-              email: key,
-              commits: value.commits,
-              lines: value.lines,
-            });
+            let newAuthor = new Author(key, null, value.commits, value.lines);
+            authors.push(newAuthor);
+            this.authors.push(newAuthor);
           }
         }
-        console.log(gitlog.files);
-        this.files = this.files.concat(gitlog.files);
+        const lines = {
+          added: gitlog.lines.added,
+          deleted: gitlog.lines.deleted,
+        };
+        var repository = new Repository(
+          repo,
+          gitlog.files,
+          [],
+          authors,
+          gitlog.commits,
+          lines
+        );
+        this.repos.push(repository);
       }
 
       if (this.repositories.filter((x) => x.path).length > 0) {
@@ -375,11 +400,55 @@ export default {
         );
       }
     },
+    ignoreFile: function (path, repositoryPath) {
+      if (this.isIgnored(path, repositoryPath)) {
+        return;
+      }
+
+      if (this.repos.find((x) => x.path === repositoryPath)) {
+        let repo = this.repos.find((x) => x.path === repositoryPath);
+        const filePath = path
+          .replace(/,\s*$/, "")
+          .replace(repo, "")
+          .replace(/^\/+/, "");
+
+        repo.ignoredFiles.push(filePath);
+      }
+    },
+    isIgnored: function (path, repositoryPath) {
+      let repo = this.repos.find((x) => x.path === repositoryPath);
+      if (repo !== undefined) {
+        const filePath = path
+          .replace(/,\s*$/, "")
+          .replace(repo, "")
+          .replace(/^\/+/, "");
+        return (
+          repo.ignoredFiles.find((x) => filePath.startsWith(x)) !== undefined
+        );
+      }
+    },
+    stopIgnoreFile: function (path, repositoryPath) {
+      if (this.repos.find((x) => x.path === repositoryPath)) {
+        let repo = this.repos.find((x) => x.path === repositoryPath);
+        const filePath = path
+          .replace(/,\s*$/, "")
+          .replace(repo, "")
+          .replace(/^\/+/, "");
+        if (repo.ignoredFiles.includes(filePath)) {
+          repo.ignoredFiles = repo.ignoredFiles.filter((x) => x != filePath);
+        }
+      }
+    },
   },
   watch: {
-    ignore: function (value) {
-      localStorage.ignore = value
-    }
-  }
+    fileSelected: async function (value) {
+      this.filePreview = await this.$axios.$get(`/file?file=${value}`);
+    },
+  },
 };
 </script>
+<style scoped>
+.filePreview {
+  overflow: hidden;
+}
+</style>

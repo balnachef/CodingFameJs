@@ -1,38 +1,41 @@
 const shell = require('shelljs')
 
-function createNode(path, tree, fullpath) {
-    var name = path.shift();
-    var idx = tree.findIndex(function (e) {
-        return e.name == name;
-    });
-    if (idx < 0) {
-        if (name) {
-            tree.push({
-                name: name,
-                children: [],
-                path: fullpath,
-            });
-        }
-        if (path.length !== 0) {
-            if (name) {
-                createNode(path, tree[tree.length - 1].children, fullpath);
-            }
-        }
+function createNode (path, tree, fullpath, repo, currentPath = null) {
+  const name = path.shift()
+  const idx = tree.findIndex(function (e) {
+    return e.name == name
+  })
+  if (currentPath === null) {
+    currentPath = `${repo}/${name}`
+  } else {
+    currentPath += `/${name}`
+  }
+  if (idx < 0) {
+    if (name) {
+      tree.push({
+        name,
+        children: [],
+        path: currentPath,
+        repo
+      })
     }
-    else {
-        if (name) {
-            createNode(path, tree[idx].children, fullpath);
-        }
+    if (path.length !== 0) {
+      if (name) {
+        createNode(path, tree[tree.length - 1].children, fullpath, repo, currentPath)
+      }
     }
+  } else if (name) {
+    createNode(path, tree[idx].children, fullpath, repo, currentPath)
+  }
 }
-function parse(data) {
-    var tree = [];
-    for (var i = 0; i < data.length; i++) {
-        var path = data[i];
-        var split = path.split('/');
-        createNode(split, tree, path);
-    }
-    return tree;
+function parse (data, repo) {
+  const tree = []
+  for (let i = 0; i < data.length; i++) {
+    const path = data[i]
+    const split = path.split('/')
+    createNode(split, tree, path, repo)
+  }
+  return tree
 }
 
 export default function (req, res, _) {
@@ -42,7 +45,7 @@ export default function (req, res, _) {
     return
   }
   let gitFilterParams = ''
-  let ignores = [];
+  let ignores = []
   if (url.searchParams.get('after') != null) {
     gitFilterParams += `--after=${url.searchParams.get('after')} `
   } else {
@@ -59,7 +62,7 @@ export default function (req, res, _) {
   }
 
   if (url.searchParams.get('ignore') != null) {
-    ignores = url.searchParams.get('ignore').replace(/ /g, '').split(",");
+    ignores = url.searchParams.get('ignore').replace(/ /g, '').split(',')
   }
 
   const gitlog = shell.exec(`cd ${url.searchParams.get('repo')} && git log --numstat ${gitFilterParams}`, { silent: true }).stdout
@@ -137,7 +140,7 @@ export default function (req, res, _) {
     files = files.concat(commit.stat.map(x => x.filepath))
   })
 
-  output.files = parse(files);
+  output.files = parse(files, url.searchParams.get('repo'))
 
   res.write(JSON.stringify(output))
   res.end()

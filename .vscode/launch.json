@@ -5,7 +5,7 @@
         "type": "chrome",
         "request": "launch",
         "name": "client: chrome",
-        "url": "http://localhost:3000",
+        "url": "http://localhost:{ADD_YOUR_APP_PORT_HERE}",
         "webRoot": "${workspaceFolder}"
       },
       {
@@ -14,13 +14,10 @@
         "name": "server: nuxt",
         "args": ["dev"],
         "osx": {
-          "program": "${workspaceFolder}/node_modules/.bin/nuxt"
+          "program": "${workspaceFolder}/node_modules/.bin/nuxt-ts"
         },
         "linux": {
-          "program": "${workspaceFolder}/node_modules/.bin/nuxt"
-        },
-        "windows": {
-          "program": "${workspaceFolder}/node_modules/nuxt/bin/nuxt.js"
+          "program": "${workspaceFolder}/node_modules/.bin/nuxt-ts"
         }
       }
     ],
