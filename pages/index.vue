@@ -50,7 +50,7 @@
             />
           </div>
         </v-col>
-        <v-col cols="3"> </v-col>
+        <v-col cols="3" />
       </v-row>
       <v-row justify="space-around">
         <v-col cols="3">
@@ -61,7 +61,7 @@
               </v-col>
               <v-col cols="3">
                 <v-btn
-                  v-if="index != repositories.length - 1"
+                  v-if="index !== repos.length - 1"
                   class="mx-2"
                   fab
                   dark
@@ -73,7 +73,7 @@
                 </v-btn>
 
                 <v-btn
-                  v-if="index == repositories.length - 1"
+                  v-if="index === repos.length - 1"
                   class="mx-2"
                   fab
                   dark
@@ -127,11 +127,11 @@
               <v-card>
                 <v-card-title>Total</v-card-title>
                 <v-card-text>
-                  {{ repositories.reduce((a, b) => a + b.commits, 0) }} Commits
+                  {{ repos.reduce((a, b) => a + b.commits, 0) }} Commits
                   <br />
-                  {{ repositories.reduce((a, b) => a + b.lines.added, 0) }}
+                  {{ repos.reduce((a, b) => a + b.lines.added, 0) }}
                   Lines added <br />
-                  {{ repositories.reduce((a, b) => a + b.lines.deleted, 0) }}
+                  {{ repos.reduce((a, b) => a + b.lines.deleted, 0) }}
                   Lines deleted <br />
                 </v-card-text>
               </v-card>
@@ -162,20 +162,32 @@
         </v-col>
       </v-row>
     </div>
-    <v-divider />
-
+    <v-divider class="mt-5" />
     <v-row>
+      <v-col>
+        <div class="mt-3">
+          <commits-and-code-chart
+            v-for="(repo, index) in rawData"
+            :key="index"
+            :repo="repo"
+            :dates="date"
+          />
+        </div>
+      </v-col>
+    </v-row>
+    <v-divider />
+    <v-row class="mt-5">
       <v-col cols="6">
         <div v-for="(repo, index) in repos" :key="index">
           <project-tree
             :items="repo.structure"
-            :activeFile.sync="fileSelected"
-            :openFile.sync="fileOpened"
-            :isIgnoredCallback="isIgnored"
-            :stopIgnoreFileCallback="stopIgnoreFile"
-            :ignoreFileCallback="ignoreFile"
+            :active-file.sync="fileSelected"
+            :open-file.sync="fileOpened"
+            :is-ignored-callback="isIgnored"
+            :stop-ignore-file-callback="stopIgnoreFile"
+            :ignore-file-callback="ignoreFile"
           />
-          <v-divider />
+          <v-divider v-if="repo.structure.length > 0" />
         </div>
       </v-col>
       <v-col cols="6">
@@ -188,31 +200,30 @@
         </v-card>
       </v-col>
     </v-row>
-
-    <!-- <GChart type="PieChart" :data="pieCommitsData" :options="chartOptions" /> -->
-
-    <!-- <GChart type="ColumnChart" :data="Last3MonthsCommits" :options="chartOptions" /> -->
   </div>
 </template>
 <script>
 /* eslint-disable */
-import { GChart } from "vue-google-charts";
-
 import { Repository } from "~/models/repository";
 import { Author } from "~/models/author";
-import ProjectTree from '../components/ProjectTree.vue';
+import ProjectTree from "../components/ProjectTree.vue";
+import CommitsAndCodeChart from "../components/CommitsAndCodeChart.vue";
 
 export default {
   components: {
-    GChart,
     ProjectTree,
+    CommitsAndCodeChart,
   },
   data: () => ({
     filePreview: "",
-    tree: [],
     fileSelected: [],
     fileOpened: [],
-    date: [],
+    date: [
+      new Date(new Date().setDate(new Date().getDate() - 30))
+        .toISOString()
+        .substr(0, 10),
+      new Date(Date.now()).toISOString().substr(0, 10),
+    ],
     datePicker: false,
     predifineDateRanges: [
       {
@@ -228,7 +239,7 @@ export default {
       {
         title: "Last Month",
         value: [
-          new Date(new Date().setDate(new Date().getMonth() - 30))
+          new Date(new Date().setDate(new Date().getDate() - 30))
             .toISOString()
             .substr(0, 10),
           new Date(Date.now()).toISOString().substr(0, 10),
@@ -253,29 +264,12 @@ export default {
         ],
       },
     ],
-    pieCommitsData: [["Author", "Commits"]],
-    Last3MonthsCommits: [
-      ["Month", "a1", "a2", "a3"],
-      ["2014", 1000, 400, 200],
-      ["2015", 1170, 460, 250],
-      ["2016", 660, 1120, 300],
-      ["2017", 1030, 540, 350],
-    ],
-    chartOptions: {
-      chart: {
-        title: "Company Performance",
-        subtitle: "",
-      },
-    },
     authors: [],
     files: [],
-    repositories: [{ path: "", lines: {}, commits: 0, authors: [] }],
     repos: [],
+    rawData: [],
   }),
   computed: {
-    analizedRepositories: function () {
-      return this.repositories.filter((x) => x.path);
-    },
     selectedFile: async function () {
       const gitlog = await this.$axios.$get(`/file?file=${repo}`);
     },
@@ -296,78 +290,66 @@ export default {
     },
   },
   mounted() {
-    if (localStorage.getItem("repositories")) {
-      this.repositories = JSON.parse(localStorage.getItem("repositories"));
-    }
-
-    if (localStorage.ignore) {
-      this.ignore = localStorage.ignore;
-    }
-  },
-  created() {
     if (process.client) {
-      if (localStorage.getItem("repositories")) {
-        console.log(localStorage.getItem("repositories"));
-        this.repositories = JSON.parse(localStorage.getItem("repositories"));
+      if (localStorage.getItem("hasData")) {
+        if (localStorage.getItem("authors")) {
+          this.authors = JSON.parse(localStorage.getItem("authors"));
+        }
+        if (localStorage.getItem("date")) {
+          this.date = JSON.parse(localStorage.getItem("date"));
+        }
+        if (localStorage.getItem("repos")) {
+          this.repos = JSON.parse(localStorage.getItem("repos"));
+        }
+        if (localStorage.getItem("rawData")) {
+          this.rawData = JSON.parse(localStorage.getItem("rawData"));
+        }
+      } else {
+        if (localStorage.getItem("repos")) {
+          this.repos = JSON.parse(localStorage.getItem("repos"));
+          this.analize();
+        } else {
+          this.repos.push(new Repository("", [], [], [], 0, 0));
+        }
+        
       }
-      this.analize();
     }
   },
-  async fetch() {
-    // const lastMonthBegin = new Date(
-    //   new Date().setMonth(new Date().getMonth() - 2)
-    // )
-    //   .toISOString()
-    //   .slice(0, 10);
-    // const lastMonthEnd = new Date(
-    //   new Date().setMonth(new Date().getMonth() - 2)
-    // )
-    //   .toISOString()
-    //   .slice(0, 10);
-    // const gitlogLastMonth = await this.$axios.$get(
-    //   `/gitlog?after=${lastMonthBegin}&before=${lastMonthEnd}`
-    // );
-    // this.Last3MonthsCommits = [["Month"]];
-    // this.Last3MonthsCommits[0];
-    // for (const [key, value] of Object.entries(gitlogLastMonth["authors"])) {
-    // }
-  },
+  async fetch() {},
   methods: {
     addRepository: function () {
-      this.repositories.push({ path: "", lines: {}, commits: 0, authors: [] });
-      localStorage.repositories = JSON.stringify(this.repositories);
+      this.repos.push(new Repository("", [], [], [], 0, 0));
     },
     removeRepository: function (index) {
-      this.repositories.splice(index, 1);
-      localStorage.repositories = JSON.stringify(this.repositories);
+      this.repos.splice(index, 1);
     },
     analize: async function () {
-      this.pieCommitsData = [["Author", "Commits"]];
       this.authors = [];
-      this.files = [];
-      this.repos = [];
-      const authors = [];
-      for (let index = 0; index < this.repositories.length; index++) {
-        const repo = this.repositories[index].path;
-        if (repo === "") {
-          continue;
+      this.rawData = [];
+      this.repos.forEach(async (repository) => {
+        if (repository.path === "") {
+          return;
         }
         let dates = "";
         if (this.date.length === 2) {
           dates = `&after=${this.date[0]}&before=${this.date[1]}`;
         }
         let ignore = "";
-        if (this.ignore && this.ignore.length > 0) {
-          ignore = `&ignore=${this.ignore}`
-            .replace(/ /g, "")
-            .replace(/,\s*$/, "");
+
+        if (repository.ignoredFiles.length > 0) {
+          ignore = "&ignore=" + repository.ignoredFiles.join(",");
         }
         const gitlog = await this.$axios.$get(
-          `/gitlog?repo=${repo}${dates}${ignore}`
+          `/gitlog?repo=${repository.path}${dates}${ignore}`
         );
 
+        const rawData = await this.$axios.$get(
+          `/gitlog?repo=${repository.path}${dates}${ignore}&raw=true`
+        );
+
+        this.rawData.push(rawData);
+        const authors = []  
         for (const [key, value] of Object.entries(gitlog["authors"])) {
-          this.pieCommitsData.push([key, value.commits]);
           if (this.authors.find((x) => x.email === key)) {
             let author = this.authors.find((x) => x.email === key);
             author.commits += value.commits;
@@ -379,25 +361,19 @@ export default {
             this.authors.push(newAuthor);
           }
         }
-        const lines = {
-          added: gitlog.lines.added,
-          deleted: gitlog.lines.deleted,
-        };
-        var repository = new Repository(
-          repo,
-          gitlog.files,
-          [],
-          authors,
-          gitlog.commits,
-          lines
-        );
-        this.repos.push(repository);
-      }
 
-      if (this.repositories.filter((x) => x.path).length > 0) {
-        localStorage.repositories = JSON.stringify(
-          this.repositories.filter((x) => x.path)
-        );
+        repository.structure = gitlog.files;
+        repository.commits = gitlog.commits;
+        repository.lines = gitlog.lines;
+        repository.authors = authors;
+      });
+
+      if (this.repos.length > 0) {
+        localStorage.authors = JSON.stringify(this.authors);
+        localStorage.repos = JSON.stringify(this.repos);
+        localStorage.rawData = JSON.stringify(this.rawData);
+        localStorage.date = JSON.stringify(this.date);
+        localStorage.hasData = 1;
       }
     },
     ignoreFile: function (path, repositoryPath) {
@@ -407,10 +383,7 @@ export default {
 
       if (this.repos.find((x) => x.path === repositoryPath)) {
         let repo = this.repos.find((x) => x.path === repositoryPath);
-        const filePath = path
-          .replace(/,\s*$/, "")
-          .replace(repo, "")
-          .replace(/^\/+/, "");
+        const filePath = path.replace(repositoryPath, "").replace(/^\/+/, "");
 
         repo.ignoredFiles.push(filePath);
       }
@@ -418,22 +391,21 @@ export default {
     isIgnored: function (path, repositoryPath) {
       let repo = this.repos.find((x) => x.path === repositoryPath);
       if (repo !== undefined) {
-        const filePath = path
-          .replace(/,\s*$/, "")
-          .replace(repo, "")
-          .replace(/^\/+/, "");
-        return (
+        const filePath = path.replace(repositoryPath, "").replace(/^\/+/, "");
+        if (repo.ignoredFiles.find((x) => filePath === x) !== undefined) {
+          return 1;
+        } else if (
           repo.ignoredFiles.find((x) => filePath.startsWith(x)) !== undefined
-        );
+        ) {
+          return 2;
+        }
+        return false;
       }
     },
     stopIgnoreFile: function (path, repositoryPath) {
       if (this.repos.find((x) => x.path === repositoryPath)) {
         let repo = this.repos.find((x) => x.path === repositoryPath);
-        const filePath = path
-          .replace(/,\s*$/, "")
-          .replace(repo, "")
-          .replace(/^\/+/, "");
+        const filePath = path.replace(repositoryPath, "").replace(/^\/+/, "");
         if (repo.ignoredFiles.includes(filePath)) {
           repo.ignoredFiles = repo.ignoredFiles.filter((x) => x != filePath);
         }

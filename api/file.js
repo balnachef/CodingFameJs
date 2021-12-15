@@ -11,7 +11,8 @@ export default function (req, res, _) {
   try {
     fs.readFile(path, 'utf8', (err, data) => {
       if (err) {
-        res.write(err)
+        res.write(err.name)
+        res.write(err.message)
         res.end()
         return
       }

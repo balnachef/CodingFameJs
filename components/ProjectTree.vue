@@ -1,31 +1,39 @@
 <template>
   <v-treeview
+    v-if="items.length > 0"
     :items="items"
     activatable
     item-key="path"
     open-on-click
     transition
-    :active.sync="activeFile"
-    :open.sync="openFile"
-    v-if="items.length > 0"
+    :active.sync="innerActiveFile"
+    :open.sync="innerOpenFile"
   >
     <template #prepend="{ item, open }">
       <v-icon v-if="item.children && item.children.length > 0">
         {{ open ? "mdi-folder-open" : "mdi-folder" }}
       </v-icon>
-      <v-icon v-else> mdi-file-document </v-icon>
+      <v-icon v-else>
+        mdi-file-document
+      </v-icon>
     </template>
 
     <template #append="{ item }">
       <v-btn
-        v-if="isIgnoredCallback(item.path, item.repo)"
+        v-if="isIgnoredCallback(item.path, item.repo) === 1"
         icon
         @click="stopIgnoreFileCallback(item.path, item.repo)"
       >
-        <v-icon>mdi-minus-circle-off</v-icon>
+        <v-icon color="red darken-2">mdi-plus-box</v-icon>
       </v-btn>
-      <v-btn v-else icon @click="ignoreFileCallback(item.path, item.repo)">
-        <v-icon>mdi-minus-circle</v-icon>
+      <v-btn
+        v-if="isIgnoredCallback(item.path, item.repo) === 2"
+        icon
+      >
+        <v-icon color="red darken-1">mdi-plus-box</v-icon>
+      </v-btn>
+      <v-btn v-if="isIgnoredCallback(item.path, item.repo) === false" icon @click="ignoreFileCallback(item.path, item.repo)">
+        <v-icon>mdi-minus-box</v-icon>
       </v-btn>
     </template>
   </v-treeview>
@@ -35,6 +43,10 @@ import { Repository } from '~/models/repository'
 
 /* eslint-disable */
 export default {
+  data: () => ({
+    innerActiveFile: [],
+    innerOpenFile: [],
+  }),
   props: {
     items: {
       type: Array,
@@ -61,5 +73,14 @@ export default {
         type: Function
     },
   },
+
+  watch: {
+    innerActiveFile: function (value) {
+      this.$emit('update:activeFile', value)
+    },
+    innerOpenFile: function (value) {
+      this.$emit('update:openFile', value)
+    },
+  }
 };
 </script>
