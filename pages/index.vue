@@ -88,10 +88,25 @@
           </div>
         </v-col>
         <v-col cols="3">
-          <div class="analyze-buttons">
+          <div class="analyze-button">
             <v-btn color="secondary" elevation="2" @click="analize">
               Analyze
             </v-btn>
+          </div>
+
+          <div class="mt-2">
+            <v-btn color="primary" elevation="2" @click="saveConfiguration">
+              Save configuration
+            </v-btn>
+          </div>
+
+          <div class="mt-2">
+            <v-file-input
+              accept=".cfj"
+              chips
+              label="Import configuration"
+              @change="configFileSelected"
+            ></v-file-input>
           </div>
         </v-col>
         <v-col cols="3" />
@@ -204,6 +219,7 @@
 </template>
 <script>
 /* eslint-disable */
+import { saveAs } from "file-saver";
 import { Repository } from "~/models/repository";
 import { Author } from "~/models/author";
 import ProjectTree from "../components/ProjectTree.vue";
@@ -311,7 +327,6 @@ export default {
         } else {
           this.repos.push(new Repository("", [], [], [], 0, 0));
         }
-        
       }
     }
   },
@@ -322,6 +337,37 @@ export default {
     },
     removeRepository: function (index) {
       this.repos.splice(index, 1);
+    },
+    saveConfiguration: function () {
+      const data = {
+        repos: this.repos,
+        date: this.date,
+      };
+      var serializedData = JSON.stringify(data);
+
+      const blob = new Blob([serializedData], {
+        type: "text/plain;charset=utf-8",
+      });
+      const date = new Date().toISOString().substr(0, 10);
+      saveAs(blob, `${date}.cfj`);
+    },
+    configFileSelected: function (ev) {
+      if (ev) {
+        const file = ev;
+        const reader = new FileReader();
+
+        reader.onload = (e) => this.loadConfiguration(e.target.result);
+        reader.readAsText(ev);
+      }
+    },
+    loadConfiguration: function (data) {
+      const parsedData = JSON.parse(data);
+      if (parsedData.repos) {
+        this.repos = parsedData.repos;
+      }
+      if (parsedData.date) {
+        this.date = parsedData.date;
+      }
     },
     analize: async function () {
       this.authors = [];
@@ -348,7 +394,7 @@ export default {
         );
 
         this.rawData.push(rawData);
-        const authors = []  
+        const authors = [];
         for (const [key, value] of Object.entries(gitlog["authors"])) {
           if (this.authors.find((x) => x.email === key)) {
             let author = this.authors.find((x) => x.email === key);
