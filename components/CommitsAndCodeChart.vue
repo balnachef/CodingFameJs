@@ -1,5 +1,13 @@
 <template>
-  <GChart type="ColumnChart" :data="lineChartData" :options="lineChartOptions" v-if="repo.length > 0" />
+  <div>
+    <h4>{{ repoName }}</h4>
+    <GChart
+      type="ColumnChart"
+      :data="lineChartData"
+      :options="lineChartOptions"
+      v-if="repo.length > 0"
+    />
+  </div>
 </template>
 <script>
 /* eslint-disable */
@@ -11,6 +19,9 @@ export default {
     GChart,
   },
   props: {
+    repoName: {
+      type: String,
+    },
     repo: {
       type: Array,
       default: () => {},
@@ -24,7 +35,15 @@ export default {
     lineChartOptions: {
       title: "Perfomance",
       legend: { position: "top" },
-      isStacked: 'relative'
+      series: {
+        0: { targetAxisIndex: 0 },
+        1: { targetAxisIndex: 1 },
+      },
+      vAxes: {
+        // Adds titles to each axis.
+        0: { title: "Commits" },
+        1: { title: "Changes" },
+      },
     },
     lineChartData: [["Day", "Commits", "Changes"]],
   }),
@@ -35,10 +54,10 @@ export default {
       var date = new Date(commit.date);
       var dateKey = date.toISOString().substr(0, 10);
       commits[dateKey] = (commits[dateKey] ?? 0) + 1;
-      console.log(dateKey, commits[dateKey])
+      console.log(dateKey, commits[dateKey]);
       lines[dateKey] =
-        (lines[dateKey] ??
-        0) + commit.stat.reduce((p, c) => p + c.added + c.deleted, 0);
+        (lines[dateKey] ?? 0) +
+        commit.stat.reduce((p, c) => p + c.added + c.deleted, 0);
     });
     console.log(this.dates[0], this.dates[1]);
     this.getDatesBetween(

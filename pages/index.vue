@@ -95,9 +95,7 @@
           </div>
 
           <div class="mt-2">
-            <v-btn color="primary" elevation="2" @click="saveConfiguration">
-              Save configuration
-            </v-btn>
+            <SaveConfiguration :repos="repos" :date="date" />
           </div>
 
           <div class="mt-2">
@@ -186,6 +184,7 @@
             :key="index"
             :repo="repo"
             :dates="date"
+            :repo-name="repo.path"
           />
         </div>
       </v-col>
@@ -224,11 +223,13 @@ import { Repository } from "~/models/repository";
 import { Author } from "~/models/author";
 import ProjectTree from "../components/ProjectTree.vue";
 import CommitsAndCodeChart from "../components/CommitsAndCodeChart.vue";
+import SaveConfiguration from '../components/SaveConfiguration.vue';
 
 export default {
   components: {
     ProjectTree,
     CommitsAndCodeChart,
+    SaveConfiguration
   },
   data: () => ({
     filePreview: "",
