@@ -1,6 +1,6 @@
 const shell = require('shelljs')
 
-function createNode(path, tree, fullpath, repo, currentPath = null) {
+function createNode (path, tree, fullpath, repo, currentPath = null) {
   const name = path.shift()
   const idx = tree.findIndex(function (e) {
     return e.name == name
@@ -28,7 +28,7 @@ function createNode(path, tree, fullpath, repo, currentPath = null) {
     createNode(path, tree[idx].children, fullpath, repo, currentPath)
   }
 }
-function parse(data, repo) {
+function parse (data, repo) {
   const tree = []
   for (let i = 0; i < data.length; i++) {
     const path = data[i]
@@ -150,7 +150,7 @@ export default function (req, res, _) {
   res.write(JSON.stringify(output))
   res.end()
 
-  function fileExcluded(filepath) {
+  function fileExcluded (filepath) {
     for (let i = 0; i < ignores.length; i++) {
       const element = ignores[i]
       if (filepath.includes(element)) {

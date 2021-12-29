@@ -7,7 +7,7 @@
       <v-card>
         <v-card-title> Save Configuration </v-card-title>
         <v-card-text>
-          <v-text-field label="File name" v-model="fileName"></v-text-field>
+          <v-text-field v-model="fileName" label="File name" />
         </v-card-text>
         <v-card-actions>
           <v-btn color="primary" elevation="2" @click="saveConfiguration">

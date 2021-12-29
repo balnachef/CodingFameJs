@@ -2,10 +2,10 @@
   <div>
     <h4>{{ repoName }}</h4>
     <GChart
+      v-if="repo.length > 0"
       type="ColumnChart"
       :data="lineChartData"
       :options="lineChartOptions"
-      v-if="repo.length > 0"
     />
   </div>
 </template>
@@ -19,7 +19,7 @@ export default {
     GChart,
   },
   props: {
-    repoName: {
+    reponame: {
       type: String,
     },
     repo: {
@@ -31,22 +31,24 @@ export default {
       default: () => [],
     },
   },
-  data: () => ({
-    lineChartOptions: {
-      title: "Perfomance",
-      legend: { position: "top" },
-      series: {
-        0: { targetAxisIndex: 0 },
-        1: { targetAxisIndex: 1 },
+  data: function () {
+    return {
+      lineChartOptions: {
+        title: this.reponame,
+        legend: { position: "top" },
+        series: {
+          0: { targetAxisIndex: 0 },
+          1: { targetAxisIndex: 1 },
+        },
+        vAxes: {
+          // Adds titles to each axis.
+          0: { title: "Commits" },
+          1: { title: "Changes" },
+        },
       },
-      vAxes: {
-        // Adds titles to each axis.
-        0: { title: "Commits" },
-        1: { title: "Changes" },
-      },
-    },
-    lineChartData: [["Day", "Commits", "Changes"]],
-  }),
+      lineChartData: [["Day", "Commits", "Changes"]],
+    };
+  },
   mounted() {
     const commits = {};
     const lines = {};

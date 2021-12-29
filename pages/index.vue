@@ -69,7 +69,9 @@
                   small
                   @click="removeRepository(index)"
                 >
-                  <v-icon dark> mdi-minus </v-icon>
+                  <v-icon dark>
+                    mdi-minus
+                  </v-icon>
                 </v-btn>
 
                 <v-btn
@@ -104,7 +106,7 @@
               chips
               label="Import configuration"
               @change="configFileSelected"
-            ></v-file-input>
+            />
           </div>
         </v-col>
         <v-col cols="3" />
@@ -141,11 +143,11 @@
                 <v-card-title>Total</v-card-title>
                 <v-card-text>
                   {{ repos.reduce((a, b) => a + b.commits, 0) }} Commits
-                  <br />
+                  <br>
                   {{ repos.reduce((a, b) => a + b.lines.added, 0) }}
-                  Lines added <br />
+                  Lines added <br>
                   {{ repos.reduce((a, b) => a + b.lines.deleted, 0) }}
-                  Lines deleted <br />
+                  Lines deleted <br>
                 </v-card-text>
               </v-card>
             </div>
@@ -162,7 +164,9 @@
               >
                 <v-card-title>{{ author.email }}</v-card-title>
                 <v-card-text>
-                  <div class="commits-count">Commits: {{ author.commits }}</div>
+                  <div class="commits-count">
+                    Commits: {{ author.commits }}
+                  </div>
                   <div class="lines-of-code">
                     Lines of code: +{{ author.lines.added }} -{{
                       author.lines.deleted
@@ -184,7 +188,6 @@
             :key="index"
             :repo="repo"
             :dates="date"
-            :repo-name="repo.path"
           />
         </div>
       </v-col>
@@ -207,8 +210,7 @@
       <v-col cols="6">
         <v-card>
           <v-card-text class="filePreview">
-            <pre
-              >{{ filePreview }}
+            <pre>{{ filePreview }}
             </pre>
           </v-card-text>
         </v-card>
