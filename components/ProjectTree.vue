@@ -22,7 +22,7 @@
       <v-btn
         v-if="isIgnoredCallback(item.path, item.repo) === 1"
         icon
-        @click="stopIgnoreFileCallback(item.path, item.repo)"
+        @click.stop="stopIgnoreFileCallback(item.path, item.repo)"
       >
         <v-icon color="red darken-2">
           mdi-plus-box
@@ -36,7 +36,7 @@
           mdi-plus-box
         </v-icon>
       </v-btn>
-      <v-btn v-if="isIgnoredCallback(item.path, item.repo) === false" icon @click="ignoreFileCallback(item.path, item.repo, item.children && item.children.length > 0)">
+      <v-btn v-if="isIgnoredCallback(item.path, item.repo) === false" icon @click.stop="ignoreFileCallback(item.path, item.repo, item.children && item.children.length > 0)">
         <v-icon>mdi-minus-box</v-icon>
       </v-btn>
     </template>

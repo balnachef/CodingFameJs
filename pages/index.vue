@@ -226,7 +226,7 @@
           <v-card-title>{{ repository.path }}</v-card-title>
           <v-card-text>
             <div class="commits-count">
-              ignored: {{ repository.ignoredFiles }}
+              <EditIgnores :ignored-files="repository.ignoredFiles" :repo="repository.path" @ignores="onChangeIgnores" />
             </div>
           </v-card-text>
         </v-card>
@@ -239,13 +239,11 @@
 import { saveAs } from "file-saver";
 import normalize from "normalize-path";
 import minimatch from "minimatch";
-import { useCookie, setCookie } from "h3";
 import { Repository } from "~/models/repository";
 import { Author } from "~/models/author";
 import ProjectTree from "../components/ProjectTree.vue";
 import CommitsAndCodeChart from "../components/CommitsAndCodeChart.vue";
 import SaveConfiguration from "../components/SaveConfiguration.vue";
-import file from '../api/file';
 
 export default {
   components: {
@@ -475,11 +473,10 @@ export default {
 
       if (this.repos.find((x) => x.path === repositoryPath)) {
         let repo = this.repos.find((x) => x.path === repositoryPath);
-        const filePath =
-          path.replace(repositoryPath, "").replace(/^\/+/, "");
+        const filePath = path.replace(repositoryPath, "").replace(/^\/+/, "");
 
         if (isDirectory) {
-          const dirPath = filePath + "/**"
+          const dirPath = filePath + "/**";
           if (!repo.ignoredFiles.includes(dirPath)) {
             repo.ignoredFiles.push(dirPath);
           }
@@ -492,11 +489,12 @@ export default {
     isIgnored: function (path, repositoryPath) {
       path = normalize(path);
       repositoryPath = normalize(repositoryPath);
-
       let repo = this.repos.find((x) => x.path === repositoryPath);
       if (repo !== undefined) {
         const filePath = path.replace(repositoryPath, "").replace(/^\/+/, "");
-        if (repo.ignoredFiles.find((x) => minimatch(filePath, x) ) !== undefined) {
+        if (
+          repo.ignoredFiles.find((x) => minimatch(filePath, x, { matchBase: true })) !== undefined
+        ) {
           return 1;
         } else if (
           repo.ignoredFiles.find((x) => filePath.startsWith(x)) !== undefined
@@ -514,6 +512,13 @@ export default {
         if (repo.ignoredFiles.includes(filePath)) {
           repo.ignoredFiles = repo.ignoredFiles.filter((x) => x != filePath);
         }
+      }
+    },
+    onChangeIgnores: function (updatedIgnores) {
+      console.log(updatedIgnores)
+      const repo = this.repos.find((x) => x.path === updatedIgnores.repo);
+      if (repo) {
+        repo.ignoredFiles = updatedIgnores.files.filter(x => x != "");
       }
     },
   },
