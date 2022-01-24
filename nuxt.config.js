@@ -1,5 +1,3 @@
-import colors from 'vuetify/es5/util/colors'
-
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -29,7 +27,8 @@ export default {
   serverMiddleware: [
     { path: '/gitlog', handler: '~/api/gitlog.js' },
     { path: '/contributors', handler: '~/api/contributors.js' },
-    { path: '/file', handler: '~/api/file.js' }
+    { path: '/file', handler: '~/api/file.js' },
+    { path: '/tree', handler: '~/api/tree.js' }
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

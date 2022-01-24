@@ -57,7 +57,11 @@
           <div class="repositories-input">
             <v-row v-for="(item, index) in repos" :key="index">
               <v-col cols="9">
-                <v-text-field v-model="item.path" label="Repository" />
+                <v-text-field
+                  label="Repository"
+                  v-model="item.path"
+                  @input="item.path = normalize(item.path)"
+                />
               </v-col>
               <v-col cols="3">
                 <v-btn
@@ -69,9 +73,7 @@
                   small
                   @click="removeRepository(index)"
                 >
-                  <v-icon dark>
-                    mdi-minus
-                  </v-icon>
+                  <v-icon dark> mdi-minus </v-icon>
                 </v-btn>
 
                 <v-btn
@@ -143,11 +145,11 @@
                 <v-card-title>Total</v-card-title>
                 <v-card-text>
                   {{ repos.reduce((a, b) => a + b.commits, 0) }} Commits
-                  <br>
+                  <br />
                   {{ repos.reduce((a, b) => a + b.lines.added, 0) }}
-                  Lines added <br>
+                  Lines added <br />
                   {{ repos.reduce((a, b) => a + b.lines.deleted, 0) }}
-                  Lines deleted <br>
+                  Lines deleted <br />
                 </v-card-text>
               </v-card>
             </div>
@@ -164,9 +166,7 @@
               >
                 <v-card-title>{{ author.email }}</v-card-title>
                 <v-card-text>
-                  <div class="commits-count">
-                    Commits: {{ author.commits }}
-                  </div>
+                  <div class="commits-count">Commits: {{ author.commits }}</div>
                   <div class="lines-of-code">
                     Lines of code: +{{ author.lines.added }} -{{
                       author.lines.deleted
@@ -197,6 +197,7 @@
       <v-col cols="6">
         <div v-for="(repo, index) in repos" :key="index">
           <project-tree
+            v-if="repo.structure && repo.structure.length > 0"
             :items="repo.structure"
             :active-file.sync="fileSelected"
             :open-file.sync="fileOpened"
@@ -204,14 +205,29 @@
             :stop-ignore-file-callback="stopIgnoreFile"
             :ignore-file-callback="ignoreFile"
           />
-          <v-divider v-if="repo.structure.length > 0" />
+          <v-divider v-if="repo.structure && repo.structure.length > 0" />
         </div>
       </v-col>
       <v-col cols="6">
         <v-card>
+          <v-card-title>{{ selectedFileName }}</v-card-title>
           <v-card-text class="filePreview">
-            <pre>{{ filePreview }}
+            <pre
+              >{{ filePreview }}
             </pre>
+          </v-card-text>
+        </v-card>
+        <v-card
+          v-for="repository in repos"
+          :key="repository.path"
+          class="mb-2"
+          elevation="4"
+        >
+          <v-card-title>{{ repository.path }}</v-card-title>
+          <v-card-text>
+            <div class="commits-count">
+              ignored: {{ repository.ignoredFiles }}
+            </div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -221,20 +237,25 @@
 <script>
 /* eslint-disable */
 import { saveAs } from "file-saver";
+import normalize from "normalize-path";
+import minimatch from "minimatch";
+import { useCookie, setCookie } from "h3";
 import { Repository } from "~/models/repository";
 import { Author } from "~/models/author";
 import ProjectTree from "../components/ProjectTree.vue";
 import CommitsAndCodeChart from "../components/CommitsAndCodeChart.vue";
-import SaveConfiguration from '../components/SaveConfiguration.vue';
+import SaveConfiguration from "../components/SaveConfiguration.vue";
+import file from '../api/file';
 
 export default {
   components: {
     ProjectTree,
     CommitsAndCodeChart,
-    SaveConfiguration
+    SaveConfiguration,
   },
   data: () => ({
     filePreview: "",
+    selectedFileName: "",
     fileSelected: [],
     fileOpened: [],
     date: [
@@ -335,6 +356,10 @@ export default {
   },
   async fetch() {},
   methods: {
+    normalize: function (str) {
+      str = normalize(str);
+      return str;
+    },
     addRepository: function () {
       this.repos.push(new Repository("", [], [], [], 0, 0));
     },
@@ -389,11 +414,13 @@ export default {
           ignore = "&ignore=" + repository.ignoredFiles.join(",");
         }
         const gitlog = await this.$axios.$get(
-          `/gitlog?repo=${repository.path}${dates}${ignore}`
+          `/gitlog?repo=${escape(repository.path)}${dates}${escape(ignore)}`
         );
 
         const rawData = await this.$axios.$get(
-          `/gitlog?repo=${repository.path}${dates}${ignore}&raw=true`
+          `/gitlog?repo=${escape(repository.path)}${dates}${escape(
+            ignore
+          )}&raw=true`
         );
 
         this.rawData.push(rawData);
@@ -411,7 +438,11 @@ export default {
           }
         }
 
-        repository.structure = gitlog.files;
+        const fileTree = await this.$axios.$get(
+          `/tree?repo=${escape(repository.path)}`
+        );
+
+        repository.structure = fileTree;
         repository.commits = gitlog.commits;
         repository.lines = gitlog.lines;
         repository.authors = authors;
@@ -419,29 +450,53 @@ export default {
 
       if (this.repos.length > 0) {
         localStorage.authors = JSON.stringify(this.authors);
-        localStorage.repos = JSON.stringify(this.repos);
+        localStorage.repos = JSON.stringify(
+          this.repos.map((repo) => {
+            return {
+              authors: repo.authors,
+              commits: repo.commits,
+              ignoredFiles: repo.ignoredFiles,
+              lines: repo.lines,
+              path: repo.path,
+            };
+          })
+        );
         localStorage.rawData = JSON.stringify(this.rawData);
         localStorage.date = JSON.stringify(this.date);
         localStorage.hasData = 1;
+      } else {
+        localStorage.hasData = 0;
       }
     },
-    ignoreFile: function (path, repositoryPath) {
-      if (this.isIgnored(path, repositoryPath)) {
+    ignoreFile: function (path, repositoryPath, isDirectory = false) {
+      if (this.isIgnored(path, repositoryPath, isDirectory)) {
         return;
       }
 
       if (this.repos.find((x) => x.path === repositoryPath)) {
         let repo = this.repos.find((x) => x.path === repositoryPath);
-        const filePath = path.replace(repositoryPath, "").replace(/^\/+/, "");
+        const filePath =
+          path.replace(repositoryPath, "").replace(/^\/+/, "");
 
-        repo.ignoredFiles.push(filePath);
+        if (isDirectory) {
+          const dirPath = filePath + "/**"
+          if (!repo.ignoredFiles.includes(dirPath)) {
+            repo.ignoredFiles.push(dirPath);
+          }
+        }
+        if (!repo.ignoredFiles.includes(filePath)) {
+          repo.ignoredFiles.push(filePath);
+        }
       }
     },
     isIgnored: function (path, repositoryPath) {
+      path = normalize(path);
+      repositoryPath = normalize(repositoryPath);
+
       let repo = this.repos.find((x) => x.path === repositoryPath);
       if (repo !== undefined) {
         const filePath = path.replace(repositoryPath, "").replace(/^\/+/, "");
-        if (repo.ignoredFiles.find((x) => filePath === x) !== undefined) {
+        if (repo.ignoredFiles.find((x) => minimatch(filePath, x) ) !== undefined) {
           return 1;
         } else if (
           repo.ignoredFiles.find((x) => filePath.startsWith(x)) !== undefined
@@ -450,6 +505,7 @@ export default {
         }
         return false;
       }
+      return false;
     },
     stopIgnoreFile: function (path, repositoryPath) {
       if (this.repos.find((x) => x.path === repositoryPath)) {
@@ -463,7 +519,24 @@ export default {
   },
   watch: {
     fileSelected: async function (value) {
-      this.filePreview = await this.$axios.$get(`/file?file=${value}`);
+      this.selectedFileName = value[0];
+      this.filePreview = await this.$axios.$get(`/file?file=${escape(value)}`);
+    },
+    repos: {
+      handler(val, oldVal) {
+        localStorage.repos = JSON.stringify(
+          this.repos.map((repo) => {
+            return {
+              authors: repo.authors,
+              commits: repo.commits,
+              ignoredFiles: repo.ignoredFiles,
+              lines: repo.lines,
+              path: repo.path,
+            };
+          })
+        );
+      },
+      deep: true,
     },
   },
 };

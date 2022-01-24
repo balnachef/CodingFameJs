@@ -14,7 +14,7 @@ export default function (req, res, _) {
   const output = []
   users.forEach((user) => {
     const userData = user.split(' ')
-    if (userData.length == 3) {
+    if (userData.length === 3) {
       output.push({ name: `${userData[0]} ${userData[1]}`.trim(), email: userData[2].trim() })
     } else if (userData.length == 2) {
       output.push({ name: userData[0].trim(), email: userData[1].trim() })

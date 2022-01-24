@@ -1,7 +1,7 @@
 
 export default function (req, res, _) {
   const url = new URL(req.url, `http://${req.headers.host}`)
-  if (url.searchParams.get('file') == null || url.searchParams.get('file') == '') {
+  if (url.searchParams.get('file') === null || url.searchParams.get('file') === '') {
     res.end('--')
     return
   }

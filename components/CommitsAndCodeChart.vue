@@ -56,12 +56,10 @@ export default {
       var date = new Date(commit.date);
       var dateKey = date.toISOString().substr(0, 10);
       commits[dateKey] = (commits[dateKey] ?? 0) + 1;
-      console.log(dateKey, commits[dateKey]);
       lines[dateKey] =
         (lines[dateKey] ?? 0) +
         commit.stat.reduce((p, c) => p + c.added + c.deleted, 0);
     });
-    console.log(this.dates[0], this.dates[1]);
     this.getDatesBetween(
       new Date(this.dates[0]),
       new Date(this.dates[1])
