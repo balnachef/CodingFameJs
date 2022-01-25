@@ -409,10 +409,10 @@ export default {
         let ignore = "";
 
         if (repository.ignoredFiles.length > 0) {
-          ignore = "&ignore=" + repository.ignoredFiles.join(",");
+          ignore = "&ignore=" + escape(repository.ignoredFiles.join(","));
         }
         const gitlog = await this.$axios.$get(
-          `/gitlog?repo=${escape(repository.path)}${dates}${escape(ignore)}`
+          `/gitlog?repo=${escape(repository.path)}${dates}${ignore}`
         );
 
         const rawData = await this.$axios.$get(

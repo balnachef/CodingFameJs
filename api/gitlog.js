@@ -1,4 +1,5 @@
 const shell = require('shelljs')
+const minimatch = require('minimatch')
 
 export default function (req, res, _) {
   const url = new URL(req.url, `http://${req.headers.host}`)
@@ -104,16 +105,15 @@ export default function (req, res, _) {
       }
     }, 0)
     output.commits += 1
-    // files = files.concat(commit.stat.map(x => x.filepath))
   })
 
   res.write(JSON.stringify(output))
   res.end()
 
-  function fileExcluded (filepath) {
+  function fileExcluded(filepath) {
     for (let i = 0; i < ignores.length; i++) {
-      const element = ignores[i]
-      if (filepath.includes(element)) {
+      const ignorePattern = ignores[i]
+      if (minimatch(filepath, ignorePattern, { matchBase: true })) {
         return true
       }
     }

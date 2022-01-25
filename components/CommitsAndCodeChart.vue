@@ -50,23 +50,7 @@ export default {
     };
   },
   mounted() {
-    const commits = {};
-    const lines = {};
-    this.repo.forEach((commit) => {
-      var date = new Date(commit.date);
-      var dateKey = date.toISOString().substr(0, 10);
-      commits[dateKey] = (commits[dateKey] ?? 0) + 1;
-      lines[dateKey] =
-        (lines[dateKey] ?? 0) +
-        commit.stat.reduce((p, c) => p + c.added + c.deleted, 0);
-    });
-    this.getDatesBetween(
-      new Date(this.dates[0]),
-      new Date(this.dates[1])
-    ).forEach((date) => {
-      const dateKey = date.toISOString().substr(0, 10);
-      this.lineChartData.push([date, commits[dateKey], lines[dateKey]]);
-    });
+    this.createChartForDates();
   },
   methods: {
     getDatesBetween: function (startDate, endDate, includeEndDate = true) {
@@ -78,6 +62,50 @@ export default {
       }
       if (includeEndDate) dates.push(endDate);
       return dates;
+    },
+
+    createChartForDates() {
+      const commits = {};
+      const lines = {};
+      this.repo.forEach((commit) => {
+        var date = new Date(commit.date);
+        var dateKey = date.toISOString().substr(0, 10);
+        commits[dateKey] = (commits[dateKey] ?? 0) + 1;
+        lines[dateKey] =
+          (lines[dateKey] ?? 0) +
+          commit.stat.reduce((p, c) => p + c.added + c.deleted, 0);
+      });
+      var dates = this.getDatesBetween(
+        new Date(this.dates[0]),
+        new Date(this.dates[1])
+      );
+
+      if (dates.length < 30) {
+        for (let index = 0; index < dates.length; index++) {
+          const date = dates[index];
+          const dateKey = date.toISOString().substr(0, 10);
+          this.lineChartData.push([date, commits[dateKey], lines[dateKey]]);
+        }
+      } else {
+        var amountOfDates = dates.length < 120 ? 15 : 30;
+        var period = parseInt(dates.length / amountOfDates, 10);
+        var currentPeriod = 1;
+        var commitsInPeriod = 0;
+        var linesInPeriod = 0;
+        for (let index = 0; index < dates.length; index++) {
+          const date = dates[index];
+          const dateKey = date.toISOString().substr(0, 10);
+          commitsInPeriod += commits[dateKey];
+          linesInPeriod += lines[dateKey];
+          if (currentPeriod == period || dates.length == index + 1) {
+            currentPeriod = 1;
+            this.lineChartData.push([date, commitsInPeriod, linesInPeriod]);
+            commitsInPeriod = 0;
+            linesInPeriod = 0;
+          }
+          currentPeriod++;
+        }
+      }
     },
   },
 };
