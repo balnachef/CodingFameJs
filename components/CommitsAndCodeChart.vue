@@ -92,12 +92,12 @@ export default {
         var currentPeriod = 1;
         var commitsInPeriod = 0;
         var linesInPeriod = 0;
-        for (let index = 0; index < dates.length; index++) {
-          const date = dates[index];
-          const dateKey = date.toISOString().substr(0, 10);
-          commitsInPeriod += commits[dateKey];
-          linesInPeriod += lines[dateKey];
-          if (currentPeriod == period || dates.length == index + 1) {
+        for (let i = 0; i < dates.length; i++) {
+          var date = dates[i];
+          var dateKey = date.toISOString().substr(0, 10);
+          commitsInPeriod += commits[dateKey] ?? 0;
+          linesInPeriod += lines[dateKey] ?? 0;
+          if (currentPeriod == period || dates.length == i + 1) {
             currentPeriod = 1;
             this.lineChartData.push([date, commitsInPeriod, linesInPeriod]);
             commitsInPeriod = 0;
