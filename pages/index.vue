@@ -226,7 +226,11 @@
           <v-card-title>{{ repository.path }}</v-card-title>
           <v-card-text>
             <div class="commits-count">
-              <EditIgnores :ignored-files="repository.ignoredFiles" :repo="repository.path" @ignores="onChangeIgnores" />
+              <EditIgnores
+                :ignored-files="repository.ignoredFiles"
+                :repo="repository.path"
+                @ignores="onChangeIgnores"
+              />
             </div>
           </v-card-text>
         </v-card>
@@ -270,7 +274,7 @@ export default {
           new Date(new Date().setDate(new Date().getDate() - 7))
             .toISOString()
             .substr(0, 10),
-          ,
+
           new Date().toISOString().substr(0, 10),
         ],
       },
@@ -493,7 +497,9 @@ export default {
       if (repo !== undefined) {
         const filePath = path.replace(repositoryPath, "").replace(/^\/+/, "");
         if (
-          repo.ignoredFiles.find((x) => minimatch(filePath, x, { matchBase: true })) !== undefined
+          repo.ignoredFiles.find((x) =>
+            minimatch(filePath, x, { matchBase: true })
+          ) !== undefined
         ) {
           return 1;
         } else if (
@@ -515,10 +521,10 @@ export default {
       }
     },
     onChangeIgnores: function (updatedIgnores) {
-      console.log(updatedIgnores)
+      console.log(updatedIgnores);
       const repo = this.repos.find((x) => x.path === updatedIgnores.repo);
       if (repo) {
-        repo.ignoredFiles = updatedIgnores.files.filter(x => x != "");
+        repo.ignoredFiles = updatedIgnores.files.filter((x) => x != "");
       }
     },
   },
