@@ -192,20 +192,41 @@
         </div>
       </v-col>
     </v-row>
+    <v-spacer />
+    <div>
+      <v-row justify="center">
+        <v-btn fab dark color="indigo" small @click="dateDiff">
+          <v-icon> mdi-arrow-left </v-icon>
+        </v-btn>
+        <v-col cols="3">
+          <v-text-field v-model="dateRange" label="Date jumper" />
+        </v-col>
+        <v-btn fab dark color="indigo" small @click="dateAdd">
+          <v-icon> mdi-arrow-right </v-icon>
+        </v-btn>
+      </v-row>
+    </div>
     <v-divider />
     <v-row class="mt-5">
       <v-col cols="6">
-        <div v-for="(repo, index) in repos" :key="index">
+        <div class="select-repository">
+          <v-select
+            v-model="selectedRepoPath"
+            :items="repos"
+            label="Select repository"
+            item-text="path"
+            item-value="value"
+          />
+        </div>
+        <div>
           <project-tree
-            v-if="repo.structure && repo.structure.length > 0"
-            :items="repo.structure"
+            :items="selectedRepoTree"
             :active-file.sync="fileSelected"
             :open-file.sync="fileOpened"
             :is-ignored-callback="isIgnored"
             :stop-ignore-file-callback="stopIgnoreFile"
             :ignore-file-callback="ignoreFile"
           />
-          <v-divider v-if="repo.structure && repo.structure.length > 0" />
         </div>
       </v-col>
       <v-col cols="6">
@@ -258,6 +279,8 @@ export default {
   data: () => ({
     filePreview: "",
     selectedFileName: "",
+    selectedRepoPath: "",
+    selectedRepoTree: [],
     fileSelected: [],
     fileOpened: [],
     date: [
@@ -470,6 +493,34 @@ export default {
         localStorage.hasData = 0;
       }
     },
+    dateDiff: function () {
+      var startDate = new Date(Date.parse(this.date[0]));
+      var endDate = new Date(Date.parse(this.date[1]));
+      var dateDiffInTime = endDate.getTime() - startDate.getTime();
+      var dateDiffInDays = dateDiffInTime / (1000 * 3600 * 24);
+      this.date[1] = this.date[0];
+      this.date[0] = new Date(
+        startDate.setDate(startDate.getDate() - dateDiffInDays)
+      )
+        .toISOString()
+        .substr(0, 10);
+      console.log(this.date[0]);
+      this.analize();
+    },
+    dateAdd: function () {
+      var startDate = new Date(Date.parse(this.date[0]));
+      var endDate = new Date(Date.parse(this.date[1]));
+      var dateDiffInTime = endDate.getTime() - startDate.getTime();
+      var dateDiffInDays = dateDiffInTime / (1000 * 3600 * 24);
+      this.date[0] = this.date[1];
+      this.date[1] = new Date(
+        endDate.setDate(endDate.getDate() + dateDiffInDays)
+      )
+        .toISOString()
+        .substr(0, 10);
+      console.log(this.date[1]);
+      this.analize();
+    },
     ignoreFile: function (path, repositoryPath, isDirectory = false) {
       if (this.isIgnored(path, repositoryPath, isDirectory)) {
         return;
@@ -532,6 +583,10 @@ export default {
     fileSelected: async function (value) {
       this.selectedFileName = value[0];
       this.filePreview = await this.$axios.$get(`/file?file=${escape(value)}`);
+    },
+    selectedRepoPath: function (value) {
+      const repo = this.repos.find((x) => x.path === value);
+      this.selectedRepoTree = repo.structure;
     },
     repos: {
       handler(val, oldVal) {
