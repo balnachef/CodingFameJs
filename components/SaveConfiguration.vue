@@ -50,6 +50,13 @@ export default {
         this.fileName = new Date().toISOString().substr(0, 10);
       }
       saveAs(blob, `${this.fileName}.cfj`);
+
+      var savedSetting = {
+        "this.fileName": data,
+      };
+      localStorage.setItem("setting", JSON.stringify(savedSetting));
+      this.setting = JSON.parse(localStorage.getItem("setting"));
+      console.log(setting);
       this.dialog = false;
     },
   },

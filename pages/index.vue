@@ -158,14 +158,15 @@
         <v-col cols="4">
           <div class="statistics">
             <div class="author-list">
-              <v-card
-                v-for="author in authors"
-                :key="author.email"
-                class="mb-2"
-                elevation="4"
-              >
-                <v-card-title>{{ author.email }}</v-card-title>
-                <v-card-text>
+              <v-card>
+                <v-card-title>Top Authors</v-card-title>
+                <v-card-text
+                  v-for="author in sortedAuthors"
+                  :key="author.email"
+                  class="mb-2"
+                  elevation="4"
+                >
+                  <div class="author-email">{{ author.email }}</div>
                   <div class="commits-count">Commits: {{ author.commits }}</div>
                   <div class="lines-of-code">
                     Lines of code: +{{ author.lines.added }} -{{
@@ -218,7 +219,7 @@
             item-value="value"
           />
         </div>
-        <div>
+        <div class="project-tree">
           <project-tree
             :items="selectedRepoTree"
             :active-file.sync="fileSelected"
@@ -337,6 +338,19 @@ export default {
   computed: {
     selectedFile: async function () {
       const gitlog = await this.$axios.$get(`/file?file=${repo}`);
+    },
+    sortedAuthors: function () {
+      var result = this.authors;
+      result.sort(function (a, b) {
+        if (a.lines.added - a.lines.deleted < b.lines.added - b.lines.deleted) {
+          return -1;
+        }
+        if (a.lines.added - a.lines.deleted > b.lines.added - b.lines.deleted) {
+          return 1;
+        }
+        return 0;
+      });
+      return result;
     },
     dateRange: function () {
       return this.date.join(" - ");
@@ -609,6 +623,11 @@ export default {
 </script>
 <style scoped>
 .filePreview {
-  overflow: hidden;
+  max-height: 500px;
+  overflow-y: auto;
+}
+.project-tree {
+  max-height: 500px;
+  overflow-y: auto;
 }
 </style>
