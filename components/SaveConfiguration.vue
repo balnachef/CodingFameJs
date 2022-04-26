@@ -50,13 +50,20 @@ export default {
         this.fileName = new Date().toISOString().substr(0, 10);
       }
       saveAs(blob, `${this.fileName}.cfj`);
+      var mySettings = localStorage.getItem(mySettings);
+      if (mySettings === null) {
+        var newSettings = {};
+        newSettings[this.fileName] = data;
+        localStorage.setItem("settings", JSON.stringify(newSettings));
+      } else {
+        newSettings[this.fileName] = data;
+        localStorage.setItem("settings", JSON.stringify(newSettings));
+      }
+      var settings = JSON.parse(localStorage.getItem("settings"));
 
-      var savedSetting = {
-        "this.fileName": data,
-      };
-      localStorage.setItem("setting", JSON.stringify(savedSetting));
-      this.setting = JSON.parse(localStorage.getItem("setting"));
-      console.log(setting);
+      for (var i in settings) {
+        console.log(i);
+      }
       this.dialog = false;
     },
   },

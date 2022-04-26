@@ -1,6 +1,5 @@
 <template>
   <div>
-    <h4>{{ repoName }}</h4>
     <GChart
       v-if="repo.length > 0"
       type="ColumnChart"

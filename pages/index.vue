@@ -110,6 +110,15 @@
               @change="configFileSelected"
             />
           </div>
+          <div class="load-configurations">
+            <v-select
+              v-model="selectedRepoPath"
+              :items="repos"
+              label="--"
+              item-text="path"
+              item-value="value"
+            />
+          </div>
         </v-col>
         <v-col cols="3" />
       </v-row>
@@ -232,28 +241,19 @@
       </v-col>
       <v-col cols="6">
         <v-card>
+          <v-card-title>{{ selectedRepoPath }}</v-card-title>
+          <v-card-text>
+            <div class="commits-count">
+              <EditIgnores @ignores="onChangeIgnores" />
+            </div>
+          </v-card-text>
+        </v-card>
+        <v-card>
           <v-card-title>{{ selectedFileName }}</v-card-title>
           <v-card-text class="filePreview">
             <pre
               >{{ filePreview }}
             </pre>
-          </v-card-text>
-        </v-card>
-        <v-card
-          v-for="repository in repos"
-          :key="repository.path"
-          class="mb-2"
-          elevation="4"
-        >
-          <v-card-title>{{ repository.path }}</v-card-title>
-          <v-card-text>
-            <div class="commits-count">
-              <EditIgnores
-                :ignored-files="repository.ignoredFiles"
-                :repo="repository.path"
-                @ignores="onChangeIgnores"
-              />
-            </div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -629,5 +629,8 @@ export default {
 .project-tree {
   max-height: 500px;
   overflow-y: auto;
+}
+.mx-2 {
+  margin: 20px;
 }
 </style>
