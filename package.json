@@ -28,6 +28,7 @@
     "minimatch": "^3.0.4",
     "normalize-path": "^3.0.0",
     "nuxt": "^2.15.7",
+    "parse-git-log": "^0.2.1",
     "parse-git-numstat": "^1.1.2",
     "shelljs": "^0.8.4",
     "shelljs-exec-proxy": "^0.2.0",

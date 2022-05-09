@@ -97,6 +97,11 @@
               Analyze
             </v-btn>
           </div>
+          <div class="newDate-button">
+            <v-btn color="secondary" elevation="2" @click="newDate">
+              newDate
+            </v-btn>
+          </div>
 
           <div class="mt-2">
             <SaveConfiguration :repos="repos" :date="date" />
@@ -112,9 +117,8 @@
           </div>
           <div class="load-configurations">
             <v-select
-              v-model="selectedRepoPath"
-              :items="repos"
-              label="--"
+              :items="loadConfig"
+              label="Load configuration"
               item-text="path"
               item-value="value"
             />
@@ -209,7 +213,7 @@
           <v-icon> mdi-arrow-left </v-icon>
         </v-btn>
         <v-col cols="3">
-          <v-text-field v-model="dateRange" label="Date jumper" />
+          <v-text-field v-model="newDate" label="Date jumper" />
         </v-col>
         <v-btn fab dark color="indigo" small @click="dateAdd">
           <v-icon> mdi-arrow-right </v-icon>
@@ -339,6 +343,16 @@ export default {
     selectedFile: async function () {
       const gitlog = await this.$axios.$get(`/file?file=${repo}`);
     },
+    loadConfig: function () {
+      if (process.client) {
+        var fileNames = [];
+        const settings = JSON.parse(localStorage.getItem("settings"));
+        for (let i in settings) {
+          fileNames = [i];
+        }
+        return fileNames;
+      }
+    },
     sortedAuthors: function () {
       var result = this.authors;
       result.sort(function (a, b) {
@@ -355,6 +369,19 @@ export default {
     dateRange: function () {
       return this.date.join(" - ");
     },
+    newDate: function () {
+      const dateJumper = this.dateRange;
+      this.date = dateJumper.split(" - ");
+      var firstDate = new Date(this.date[0]).toISOString().substr(0, 10);
+      var secondDate = new Date(this.date[1]).toISOString().substr(0, 10);
+      const dateArray = [firstDate, secondDate];
+      return dateArray.join(" - ");
+
+      console.log(firstDate);
+      console.log(secondDate);
+      console.log(dateArray);
+      console.log(newdatearray);
+    },
     ignore: function () {
       if (this.repos.length > 0) {
         console.log("this.repos", this.repos);
@@ -368,7 +395,7 @@ export default {
       }
     },
   },
-  mounted() {
+  async mounted() {
     if (process.client) {
       if (localStorage.getItem("hasData")) {
         if (localStorage.getItem("authors")) {
@@ -379,6 +406,11 @@ export default {
         }
         if (localStorage.getItem("repos")) {
           this.repos = JSON.parse(localStorage.getItem("repos"));
+          let repository = this.repos[0];
+          const fileTree = await this.$axios.$get(
+            `/tree?repo=${escape(repository.path)}`
+          );
+          this.selectedRepoTree = fileTree;
         }
         if (localStorage.getItem("rawData")) {
           this.rawData = JSON.parse(localStorage.getItem("rawData"));
@@ -602,6 +634,16 @@ export default {
       const repo = this.repos.find((x) => x.path === value);
       this.selectedRepoTree = repo.structure;
     },
+    // date: {
+    //   handler(){
+    //      //newDate: function(){
+    //   //dateRangeArray:function(){
+    //     var dateJumper=dateRange();
+    //     // var newDateRange=dateJumper().split("-")
+    //     this.date=dateJumper().split(" - ");
+    //     console.log(this.date)
+    //   }
+    // }
     repos: {
       handler(val, oldVal) {
         localStorage.repos = JSON.stringify(
