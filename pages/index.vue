@@ -369,19 +369,6 @@ export default {
     dateRange: function () {
       return this.date.join(" - ");
     },
-    newDate: function () {
-      const dateJumper = this.dateRange;
-      this.date = dateJumper.split(" - ");
-      var firstDate = new Date(this.date[0]).toISOString().substr(0, 10);
-      var secondDate = new Date(this.date[1]).toISOString().substr(0, 10);
-      const dateArray = [firstDate, secondDate];
-      return dateArray.join(" - ");
-
-      console.log(firstDate);
-      console.log(secondDate);
-      console.log(dateArray);
-      console.log(newdatearray);
-    },
     ignore: function () {
       if (this.repos.length > 0) {
         console.log("this.repos", this.repos);
@@ -436,6 +423,17 @@ export default {
     },
     removeRepository: function (index) {
       this.repos.splice(index, 1);
+    },
+    newDate: function () {
+      const dateJumper = this.dateRange;
+      this.date = dateJumper.split(" - ");
+      var firstDate = new Date(this.date[0]).toISOString().substr(0, 10);
+      var secondDate = new Date(this.date[1]).toISOString().substr(0, 10);
+      const dateArray = [firstDate, secondDate];
+      console.log(firstDate);
+      console.log(secondDate);
+      console.log(dateArray.join(" - "));
+      return dateArray.join(" - ");
     },
     saveConfiguration: function () {
       const data = {
@@ -550,7 +548,6 @@ export default {
       )
         .toISOString()
         .substr(0, 10);
-      console.log(this.date[0]);
       this.analize();
     },
     dateAdd: function () {
@@ -564,7 +561,6 @@ export default {
       )
         .toISOString()
         .substr(0, 10);
-      console.log(this.date[1]);
       this.analize();
     },
     ignoreFile: function (path, repositoryPath, isDirectory = false) {
