@@ -97,12 +97,6 @@
               Analyze
             </v-btn>
           </div>
-          <div class="newDate-button">
-            <v-btn color="secondary" elevation="2" @click="newDate">
-              newDate
-            </v-btn>
-          </div>
-
           <div class="mt-2">
             <SaveConfiguration :repos="repos" :date="date" />
           </div>
@@ -213,7 +207,7 @@
           <v-icon> mdi-arrow-left </v-icon>
         </v-btn>
         <v-col cols="3">
-          <v-text-field v-model="newDate" label="Date jumper" />
+          <v-text-field v-model="dateRange" label="Date jumper" />
         </v-col>
         <v-btn fab dark color="indigo" small @click="dateAdd">
           <v-icon> mdi-arrow-right </v-icon>
@@ -543,11 +537,14 @@ export default {
       var dateDiffInTime = endDate.getTime() - startDate.getTime();
       var dateDiffInDays = dateDiffInTime / (1000 * 3600 * 24);
       this.date[1] = this.date[0];
-      this.date[0] = new Date(
-        startDate.setDate(startDate.getDate() - dateDiffInDays)
-      )
-        .toISOString()
-        .substr(0, 10);
+      var newDateDiff = this.$set(
+        this.date,
+        0,
+        new Date(startDate.setDate(startDate.getDate() - dateDiffInDays))
+          .toISOString()
+          .substr(0, 10)
+      );
+
       this.analize();
     },
     dateAdd: function () {
@@ -556,11 +553,13 @@ export default {
       var dateDiffInTime = endDate.getTime() - startDate.getTime();
       var dateDiffInDays = dateDiffInTime / (1000 * 3600 * 24);
       this.date[0] = this.date[1];
-      this.date[1] = new Date(
-        endDate.setDate(endDate.getDate() + dateDiffInDays)
-      )
-        .toISOString()
-        .substr(0, 10);
+      var newDateAdd = this.$set(
+        this.date,
+        1,
+        new Date(startDate.setDate(startDate.getDate() - dateDiffInDays))
+          .toISOString()
+          .substr(0, 10)
+      );
       this.analize();
     },
     ignoreFile: function (path, repositoryPath, isDirectory = false) {
@@ -630,16 +629,6 @@ export default {
       const repo = this.repos.find((x) => x.path === value);
       this.selectedRepoTree = repo.structure;
     },
-    // date: {
-    //   handler(){
-    //      //newDate: function(){
-    //   //dateRangeArray:function(){
-    //     var dateJumper=dateRange();
-    //     // var newDateRange=dateJumper().split("-")
-    //     this.date=dateJumper().split(" - ");
-    //     console.log(this.date)
-    //   }
-    // }
     repos: {
       handler(val, oldVal) {
         localStorage.repos = JSON.stringify(
