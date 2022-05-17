@@ -8,9 +8,13 @@ export default function (req, res, _) {
   }
   shell.echo(`cd ${url.searchParams.get('repo')} && git log --format="%an %aE" | sort /unique`)
   const gitlog = shell.exec(`cd ${url.searchParams.get('repo')} && git log --format="%an %aE" | sort /unique`, { silent: true }).stdout
+////////////////////////////////////////////////////////////////////////////
+  shell.echo(`cd ${url.searchParams.get('repo')} && git ls-tree -r HEAD`)
+  const blame = shell.exec(`cd ${url.searchParams.get('repo')} && git ls-tree -r HEAD`, { silent: true }).stdout
+ console.log(blame)
+//////////////////////////////////////////////////////////
 
   const users = gitlog.split('\r')
-
   const output = []
   users.forEach((user) => {
     const userData = user.split(' ')

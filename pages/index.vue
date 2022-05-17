@@ -479,6 +479,12 @@ export default {
         const gitlog = await this.$axios.$get(
           `/gitlog?repo=${escape(repository.path)}${dates}${ignore}`
         );
+        const contributors = await this.$axios.$get(
+          `/contributors?repo=${escape(repository.path)}${dates}${ignore}`
+        );
+        // const gitblame = await this.$axios.$get(
+        //   `/gitblame?repo=${escape(repository.path)}${dates}${ignore}`
+        // );
 
         const rawData = await this.$axios.$get(
           `/gitlog?repo=${escape(repository.path)}${dates}${escape(

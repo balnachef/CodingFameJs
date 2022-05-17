@@ -29,6 +29,8 @@ export default {
     { path: '/contributors', handler: '~/api/contributors.js' },
     { path: '/file', handler: '~/api/file.js' },
     { path: '/tree', handler: '~/api/tree.js' }
+    // { path: '/gitblame', handler: '~/api/gitblame.js' }
+
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
