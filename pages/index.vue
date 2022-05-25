@@ -342,7 +342,7 @@ export default {
         var fileNames = [];
         const settings = JSON.parse(localStorage.getItem("settings"));
         for (let i in settings) {
-          fileNames = [i];
+          fileNames.push(i);
         }
         return fileNames;
       }
@@ -428,19 +428,6 @@ export default {
       console.log(secondDate);
       console.log(dateArray.join(" - "));
       return dateArray.join(" - ");
-    },
-    saveConfiguration: function () {
-      const data = {
-        repos: this.repos,
-        date: this.date,
-      };
-      var serializedData = JSON.stringify(data);
-
-      const blob = new Blob([serializedData], {
-        type: "text/plain;charset=utf-8",
-      });
-      const date = new Date().toISOString().substr(0, 10);
-      saveAs(blob, `${date}.cfj`);
     },
     configFileSelected: function (ev) {
       if (ev) {

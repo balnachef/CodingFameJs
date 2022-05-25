@@ -11,7 +11,14 @@
         </v-card-text>
         <v-card-actions>
           <v-btn color="primary" elevation="2" @click="saveConfiguration">
-            Save
+            Save localy
+          </v-btn>
+          <v-btn
+            color="primary"
+            elevation="2"
+            @click="saveConfigurationToLocalStorage"
+          >
+            Save to storage
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -50,19 +57,26 @@ export default {
         this.fileName = new Date().toISOString().substr(0, 10);
       }
       saveAs(blob, `${this.fileName}.cfj`);
-      var mySettings = localStorage.getItem(mySettings);
+      this.dialog = false;
+    },
+
+    saveConfigurationToLocalStorage: function () {
+      const data = {
+        repos: this.repos,
+        date: this.date,
+      };
+      if (!this.fileName || this.fileName.length === 0) {
+        this.fileName = new Date().toISOString().substr(0, 10);
+      }
+      var mySettings = localStorage.getItem("settings");
       if (mySettings === null) {
         var newSettings = {};
         newSettings[this.fileName] = data;
         localStorage.setItem("settings", JSON.stringify(newSettings));
       } else {
-        newSettings[this.fileName] = data;
-        localStorage.setItem("settings", JSON.stringify(newSettings));
-      }
-      var settings = JSON.parse(localStorage.getItem("settings"));
-
-      for (var i in settings) {
-        console.log(i);
+        var setting = JSON.parse(localStorage.getItem("settings"));
+        setting[this.fileName] = data;
+        localStorage.setItem("settings", JSON.stringify(setting));
       }
       this.dialog = false;
     },
