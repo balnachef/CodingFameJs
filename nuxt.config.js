@@ -28,8 +28,8 @@ export default {
     { path: '/gitlog', handler: '~/api/gitlog.js' },
     { path: '/contributors', handler: '~/api/contributors.js' },
     { path: '/file', handler: '~/api/file.js' },
-    { path: '/tree', handler: '~/api/tree.js' }
-    // { path: '/gitblame', handler: '~/api/gitblame.js' }
+    { path: '/tree', handler: '~/api/tree.js' },
+    { path: '/gitlogpatch', handler: '~/api/gitlogpatch.js' }
 
   ],
 

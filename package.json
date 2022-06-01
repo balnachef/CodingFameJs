@@ -18,12 +18,13 @@
   "dependencies": {
     "@nuxtjs/axios": "^5.13.6",
     "@nuxtjs/pwa": "^3.3.5",
+    "blamejs": "^1.0.0",
     "child_process": "^1.0.2",
     "core-js": "^3.15.1",
     "fast-glob": "^3.2.11",
     "file-saver": "^2.0.5",
     "fs": "0.0.1-security",
-    "git-blame": "^1.4.0",
+    "gitblame": "^0.1.1",
     "gitlog": "^4.0.4",
     "glob": "^7.2.0",
     "h3": "^0.3.9",
@@ -32,6 +33,7 @@
     "nuxt": "^2.15.7",
     "parse-git-log": "^0.2.1",
     "parse-git-numstat": "^1.1.2",
+    "parse-git-patch": "^1.0.7",
     "shelljs": "^0.8.4",
     "shelljs-exec-proxy": "^0.2.0",
     "vue-google-charts": "^0.3.3",
@@ -46,6 +48,5 @@
     "eslint-plugin-nuxt": "^2.0.0",
     "eslint-plugin-vue": "^7.12.1",
     "should": "~7.1.1"
-
   }
 }
